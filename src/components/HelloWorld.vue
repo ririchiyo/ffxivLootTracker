@@ -1,58 +1,100 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+    <div class="post">
+        <div v-if="players" class="content overflow-x-auto">
+            <table class="table w-full">
+                <thead>
+                    <tr>
+                        <th>Character Name</th>
+                        <th>World</th>
+                    </tr>
+                </thead>
+                <tbody v-for="player in players" :key="player.playerName" @click.prevent="obtainItems(player)">
+                    <label for="my-modal-3"></label><tr class="hover">
+                        <td>{{player.playerName}}</td>
+                        <td>{{ player.world }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <label for="my-modal-3" class="btn modal-button">Open Modal</label>
+
+        <input type="checkbox" id="my-modal-3" class="modal-toggle" />
+
+        <div class="modal overflow-x-auto">
+            <div class="modal-box relativeml overflow-x-auto">
+                <div class="overflow-x-auto">
+                    <label for="my-modal-3" class="btn btn-sm btn-circle absolute right-2 top-2"></label>
+                    <table class="table table-compact w-full">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>LootEventType</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody v-for="item in items" :key="item.timestamp">
+                            <tr>
+                                <td>{{item.itemName}}</td>
+                                <td align="center">{{item.lootEventTypeName}}</td>
+                                <td>{{new Date(item.timestamp)}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
-<script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
-</script>
+<script lang="js">
+    import { defineComponent } from 'vue';
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
+    export default defineComponent({
+        data() {
+            return {
+                loading: false,
+                post: null,
+                players: null,
+                items: null
+            };
+        },
+        created() {
+            // fetch the data when the view is created and the data is
+            // already being observed
+            this.fetchPlayerData();
+        },
+        watch: {
+            // call again the method if the route changes
+            '$route': 'fetchPlayerData',
+        },
+        methods: {
+            fetchPlayerData() {
+                this.players = null;
+                this.loading = true;
+                fetch('api/players')
+                    .then(r => r.json())
+                    .then(json => {
+                        this.players = json;
+                        this.loading = false;
+                        return;
+                    });
+            },
+            obtainItems(player) {
+                this.loading = true;
+                this.items = null;
+                fetch(`api/item?player=${player.playerName}&world=${player.world}`)
+                    .then(r => r.json())
+                    .then(json => {
+                        this.items = json;
+                        this.loading = false;
+                        document.getElementById('my-modal-3').checked = true;
+                        return;
+                    });
+
+            },
+        },
+    });
+</script>
 <style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+@import "@/css/main.css"
 </style>
